@@ -1,4 +1,4 @@
-/*
+﻿/*
 This script is usable in https://www.haxball.com/headless
 */
 
@@ -20,7 +20,7 @@ function updateAdmins() {
 
 function initPlayerStats(player) {
   if (stats.get(player.name)) return;
-  stats.set(player.name, [0, 0, 0, 0, 0, 0]); // goals, assists, wins, loses, og, cs
+  stats.set(player.name, [0, 0, 0, 0, 0, 0, 0]); // goals, assists, wins, loses, og, cs, offsides
 }
 
 /*
@@ -74,7 +74,7 @@ function rankFun() { // !ranking
 
 function resetStatsFun(player) { // !resetstats
   if (rankingCalc(player.name) > 0) {
-    stats.set(player.name, [0, 0, 0, 0, 0, 0]);
+    stats.set(player.name, [0, 0, 0, 0, 0, 0, 0]);
     room.sendChat('Your stats have been reseted ! ');
   } else {
     room.sendChat('You must have positive points to be able to reset it, sorry.');
@@ -117,7 +117,7 @@ function closeFun(player) {
 function rankingCalc(player) {
   return stats.get(player)[0] * 4 + stats.get(player)[1] * 6 +
             stats.get(player)[2] * 5 + stats.get(player)[5] * 4 -
-            stats.get(player)[3] * 0 - stats.get(player)[4] * 0;
+            stats.get(player)[3] * 0 - stats.get(player)[4] * 0 - stats.get(player)[6] * 4;
 }
 
 function ranking() {
@@ -125,7 +125,7 @@ function ranking() {
   const players = Array.from(stats.keys());
   for (let i = 2; i < players.length; i++) {
     const score = rankingCalc(players[i]);
-    // Goal: 4 pts, assist: 4 pts, win: 5 pts, cs: 4 pts, lose: 0 pts, og: 0 pts
+    // Goal: 4 pts, assist: 4 pts, win: 5 pts, cs: 4 pts, lose: 0 pts, og: 0 pts, offsides: -6pts
     overall.push({ name: players[i], value: score });
   }
   overall.sort((a, b) => b.value - a.value);
@@ -151,6 +151,7 @@ function sendStats(name) {
     cs: ${ps[5]},
     wins: ${ps[2]},
     loses: ${ps[3]},
+    offsides: ${ps[6]},
     points: ${rankingCalc(name)}
   `);
 }
@@ -260,6 +261,34 @@ function pointDistance(p1, p2) {
   return Math.sqrt(d1 * d1 + d2 * d2);
 }
 
+function checkIfItIsOffside(playerWhoPass) {
+  var players = room.getPlayerList();
+  players = players.filter(x => (x.team === 1 || x.team ===2 ));
+  if(players.length > 2){
+    if(playerWhoPass.team === 2) {
+      players.sort((a, b) => a.position.x - b.position.x);
+    } else{
+      players.sort((a, b) => b.position.x - a.position.x);
+    }
+    if(players[0].id !== playerWhoPass.id){
+      if(players[0].team === playerWhoPass.team) {
+        if(players[1].id !== playerWhoPass.id) {
+          var id = players.findIndex(x => x.id === playerWhoPass.id);
+          var i=1;
+          while (i<id) {
+            if(players[i].team !== playerWhoPass.team){
+              room.sendChat('' + players[0].name + ', you are sęp! -4pts');
+              stats.get(players[0].name)[6] += 1;
+              i=id;
+            }
+            i++;
+          }
+        }
+      }
+    }
+  }
+}
+
 function isOvertime() {
   const scores = room.getScores();
   if (scores !== null) {
@@ -358,6 +387,7 @@ room.onPlayerChat = (player, message) => {
 
 room.onPlayerBallKick = player => {
   whoTouchedLast = player;
+  checkIfItIsOffside(player);
 };
 
 let kickOff = false;
@@ -433,6 +463,7 @@ room.onTeamVictory = scores => { // Sum up all scorers since the beginning of th
     room.sendChat(key + ' ' + value[1] + value[2] + ': ' + value[0]);
   }
   teamPossFun();
+  rankFun();
 };
 
 room.onGameStop = () => {

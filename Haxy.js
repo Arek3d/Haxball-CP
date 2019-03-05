@@ -273,15 +273,17 @@ function checkIfItIsOffside(playerWhoPass) {
     if(players[0].id !== playerWhoPass.id){
       if(players[0].team === playerWhoPass.team) {
         if(players[1].id !== playerWhoPass.id) {
-          var id = players.findIndex(x => x.id === playerWhoPass.id);
-          var i=1;
-          while (i<id) {
-            if(players[i].team !== playerWhoPass.team){
-              room.sendChat('' + players[0].name + ', you are sęp! -4pts');
-              stats.get(players[0].name)[6] += 1;
-              i=id;
+          if(((players[0].position.x > 0) && (players[0].team === 1)) || ((players[0].position.x < 0) && (players[0].team === 2))){
+            var id = players.findIndex(x => x.id === playerWhoPass.id);
+            var i=1;
+            while (i<id) {
+              if(players[i].team !== playerWhoPass.team){
+                room.sendChat('' + players[0].name + ', you are sęp! -4pts');
+                stats.get(players[0].name)[6] += 1;
+                i=id;
+              }
+              i++;
             }
-            i++;
           }
         }
       }

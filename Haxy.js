@@ -1,4 +1,4 @@
-﻿/*
+/*
 This script is usable in https://www.haxball.com/headless
 */
 
@@ -11,9 +11,9 @@ room.setTimeLimit(8);
 // If there are no admins left in the room give admin to one of the remaining players.
 function updateAdmins() {
   // Get all players except the host (id = 0 is always the host)
-  const players = room.getPlayerList().filter(player => player.id !== 0 );
-  if ( players.length === 0 ) return; // No players left, do nothing.
-  if ( players.some(player => player.admin)) return; // There's an admin left so do nothing.
+  const players = room.getPlayerList().filter(player => player.id !== 0);
+  if (players.length === 0) return; // No players left, do nothing.
+  if (players.some(player => player.admin)) return; // There's an admin left so do nothing.
 
   room.setPlayerAdmin(players[0].id, true); // Give admin to the first non admin player in the list
 }
@@ -32,7 +32,7 @@ function swapFun(player) {
     const players = room.getPlayerList();
 
     players.forEach(player => {
-      if(player.team === 1) {
+      if (player.team === 1) {
         room.setPlayerTeam(player.id, 2);
       } else if (player.team === 2) {
         room.setPlayerTeam(player.id, 1);
@@ -116,8 +116,8 @@ function closeFun(player) {
 
 function rankingCalc(player) {
   return stats.get(player)[0] * 4 + stats.get(player)[1] * 6 +
-            stats.get(player)[2] * 5 + stats.get(player)[5] * 4 -
-            stats.get(player)[3] * 0 - stats.get(player)[4] * 0 - stats.get(player)[6] * 4;
+    stats.get(player)[2] * 5 + stats.get(player)[5] * 4 -
+    stats.get(player)[3] * 0 - stats.get(player)[4] * 0 - stats.get(player)[6] * 4;
 }
 
 function ranking() {
@@ -217,7 +217,7 @@ function teamPossFun() {
   redPoss = Math.round((redPoss / room.getScores().time) * 100);
   bluePoss = Math.round((bluePoss / room.getScores().time) * 100);
 
-  room.sendChat('Ball possession:  red ' + redPoss + ' - ' + bluePoss + ' blue.' );
+  room.sendChat('Ball possession:  red ' + redPoss + ' - ' + bluePoss + ' blue.');
 }
 
 function getStatsToStore() {
@@ -263,24 +263,24 @@ function pointDistance(p1, p2) {
 
 function checkIfItIsOffside(playerWhoPass) {
   var players = room.getPlayerList();
-  players = players.filter(x => (x.team === 1 || x.team ===2 ));
-  if(players.length > 2){
-    if(playerWhoPass.team === 2) {
+  players = players.filter(x => (x.team === 1 || x.team === 2));
+  if (players.length > 2) {
+    if (playerWhoPass.team === 2) {
       players.sort((a, b) => a.position.x - b.position.x);
-    } else{
+    } else {
       players.sort((a, b) => b.position.x - a.position.x);
     }
-    if(players[0].id !== playerWhoPass.id){
-      if(players[0].team === playerWhoPass.team) {
-        if(players[1].id !== playerWhoPass.id) {
-          if(((players[0].position.x > 0) && (players[0].team === 1)) || ((players[0].position.x < 0) && (players[0].team === 2))){
+    if (players[0].id !== playerWhoPass.id) {
+      if (players[0].team === playerWhoPass.team) {
+        if (players[1].id !== playerWhoPass.id) {
+          if (((players[0].position.x > 0) && (players[0].team === 1)) || ((players[0].position.x < 0) && (players[0].team === 2))) {
             var id = players.findIndex(x => x.id === playerWhoPass.id);
-            var i=1;
-            while (i<id) {
-              if(players[i].team !== playerWhoPass.team){
+            var i = 1;
+            while (i < id) {
+              if (players[i].team !== playerWhoPass.team) {
                 room.sendChat('' + players[0].name + ', you are sęp! -4pts');
                 stats.get(players[0].name)[6] += 1;
-                i=id;
+                i = id;
               }
               i++;
             }
@@ -293,16 +293,10 @@ function checkIfItIsOffside(playerWhoPass) {
 
 function isOvertime() {
   const scores = room.getScores();
-  if (scores !== null) {
-    if (scores.timeLimit !== 0) {
-      if (scores.time > scores.timeLimit) {
-        if (scores.red === 0 && hasFinished === false) {
-          stats.get(gk[0].name)[5] += 1;
-          stats.get(gk[1].name)[5] += 1;
-          hasFinished = true;
-        }
-      }
-    }
+  if (scores !== null && scores.timeLimit !== 0 && scores.time > scores.timeLimit && scores.red === 0 && hasFinished === false) {
+    stats.get(gk[0].name)[5] += 1;
+    stats.get(gk[1].name)[5] += 1;
+    hasFinished = true;
   }
 }
 // return: the name of the team who took a goal
@@ -364,7 +358,7 @@ room.onPlayerLeave = () => {
 room.onPlayerJoin = player => {
   updateAdmins(); // Gives admin to the first player who join the room if there's no one
   initPlayerStats(player); // Set new player's stat
-  room.sendChat('Hi ' + player.name + ' ! Write !help, !adminhelp, !rankhelp or !gkhelp if needed.' );
+  room.sendChat('Hi ' + player.name + ' ! Write !help, !adminhelp, !rankhelp or !gkhelp if needed.');
 };
 
 let redTeam;
@@ -396,14 +390,10 @@ let kickOff = false;
 let hasFinished = false;
 
 room.onGameTick = () => {
-  setInterval(isOvertime, 5000, hasFinished);
-
-  if (kickOff === false) { // simplest comparison to not charge usulessly the tick thing
-    if (room.getScores().time !== 0) {
-      kickOff = true;
-      gk = isGk();
-      room.sendChat('Red GK: ' + gk[0].name + ', Blue GK: ' + gk[1].name);
-    }
+  if (kickOff === false && room.getScores().time !== 0) {
+    kickOff = true;
+    gk = isGk();
+    room.sendChat('Red GK: ' + gk[0].name + ', Blue GK: ' + gk[1].name);
   }
   if (goalScored === false) {
     whoTouchedLast = getLastTouchTheBall(whoTouchedLast);
@@ -413,11 +403,13 @@ room.onGameTick = () => {
       ballCarrying.get(whoTouchedLast.name)[0] += 1 / 60;
     }
 
-    if  ( whoTouchedLast.id !== whoTouchedBall[0].id) {
+    if (whoTouchedLast.id !== whoTouchedBall[0].id) {
       whoTouchedBall[1] = whoTouchedBall[0];
       whoTouchedBall[0] = whoTouchedLast; // last player who touched the ball
     }
   }
+
+  isOvertime();
 };
 
 room.onTeamGoal = team => { // Write on chat who scored and when.
@@ -431,8 +423,8 @@ room.onTeamGoal = team => { // Write on chat who scored and when.
 
 
   room.sendChat('A goal has been scored by ' + whoTouchedBall[0].name +
-     assist + ownGoal + ' at ' +
-     time + ' against team ' + team_name(team));
+    assist + ownGoal + ' at ' +
+    time + ' against team ' + team_name(team));
 
   if (ownGoal !== '') {
     stats.get(whoTouchedBall[0].name)[4] += 1;
@@ -455,10 +447,10 @@ room.onPositionsReset = () => {
 
 room.onTeamVictory = scores => { // Sum up all scorers since the beginning of the match.
   if (scores.blue === 0 && gk[0].position !== null && hasFinished === false) stats.get(gk[0].name)[5] += 1;
-  if (scores.red === 0 && gk[1].position !== null  && hasFinished === false) stats.get(gk[1].name)[5] += 1;
+  if (scores.red === 0 && gk[1].position !== null && hasFinished === false) stats.get(gk[1].name)[5] += 1;
   if (scores.red > scores.blue) {
     updateWinLoseStats(redTeam, blueTeam);
-  } else{ updateWinLoseStats(blueTeam, redTeam); }
+  } else { updateWinLoseStats(blueTeam, redTeam); }
 
   room.sendChat('Scored goals:');
   for (const [key, value] of scorers) { // key: name of the player, value: time of the goal
